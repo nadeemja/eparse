@@ -190,7 +190,7 @@ function eparse_view($id){
     $full_title = $value['title'];
     $short_title = strip_tags(substr($full_title, 0, 30));
 
-    //Create node
+    //Create question node
     $multichoice = new stdClass();
     $multichoice->title = $short_title;
     $multichoice->type = "multichoice";
@@ -217,6 +217,21 @@ function eparse_view($id){
     //Display alternatives
     foreach ($value['alternatives'] as $key => $value) {
       
+      //Add alternatives to db
+      $nid = db_insert('quiz_multichoice_answers') // Table name no longer needs {}
+      ->fields(array(
+        'answer' => '',
+        'answer_format' => 'plain_text',
+        'feedback_if_chosen' => '', 
+        'feedback_if_chosen_format' => 'full_html',
+        'feedback_if_not_chosen' => '',
+        'feedback_if_not_chosen_format' => 'full_html',
+        'score_if_chosen' => $value['value'],
+        'score_if_not_chosen' => '0',
+        'question_nid' => $multichoice['nid'],
+        'question_vid' => $multichoice['vid']
+      ))
+      ->execute();
       $content .= ($value['value']) ? "<li><b>" . $value['text'] . "</b></li>" : "<li>" . $value['text'] . "</li>";
 
     }
