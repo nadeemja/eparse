@@ -84,8 +84,8 @@ function eparse_view($id){
   $quiz->status = 1; //(1 or 0): published or not
   $quiz->promote = 0; //(1 or 0): promoted to front page
   $quiz->comment = 0; //2 = comments on, 1 = comments of
-  //$quiz = node_submit($quiz); // Prepare quiz for saving
-  //node_save($quiz);
+  $quiz = node_submit($quiz); // Prepare quiz for saving
+  node_save($quiz);
 
   //Find questions
   $subject = ' qstart  intro  ' . $result['html'];
@@ -208,6 +208,20 @@ function eparse_view($id){
     $multichoice = node_submit($multichoice); // Prepare multichoice for saving
     node_save($multichoice);
 
+    //add question to quiz
+     //Add alternatives to db
+      $add_question_to_quiz = db_insert('quiz_node_relationship') // Table name no longer needs {}
+      ->fields(array(
+        'parent_nid' => $quiz->nid,
+        'parent_vid' => $quiz->vid,
+        'child_nid' => $multichoice->nid,
+        'child_vid' => $multichoice->vid,
+        'question_status' => 1,
+        'weight' => $key + 1,
+        'max_score' => 1,
+      ))
+      ->execute();
+
     //Display question
     $content .= "<h3>$key: ". $value['title'] ."</h3>";
 
@@ -218,7 +232,7 @@ function eparse_view($id){
     foreach ($value['alternatives'] as $key => $value) {
       
       //Add alternatives to db
-      $nid = db_insert('quiz_multichoice_answers') // Table name no longer needs {}
+      $add_db_alt = db_insert('quiz_multichoice_answers') // Table name no longer needs {}
       ->fields(array(
         'answer' => '',
         'answer_format' => 'plain_text',
@@ -228,10 +242,11 @@ function eparse_view($id){
         'feedback_if_not_chosen_format' => 'full_html',
         'score_if_chosen' => $value['value'],
         'score_if_not_chosen' => '0',
-        'question_nid' => $multichoice['nid'],
-        'question_vid' => $multichoice['vid']
+        'question_nid' => $multichoice->nid,
+        'question_vid' => $multichoice->vid
       ))
       ->execute();
+
       $content .= ($value['value']) ? "<li><b>" . $value['text'] . "</b></li>" : "<li>" . $value['text'] . "</li>";
 
     }
