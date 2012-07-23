@@ -186,9 +186,13 @@ function eparse_view($id){
   foreach ($true_alts as $key => $value) {
 
 
+    //short and full titles
+    $full_title = $value['title'];
+    $short_title = strip_tags(substr($full_title, 0, 30));
+
     //Create node
     $multichoice = new stdClass();
-    $multichoice->title = 'test';
+    $multichoice->title = $short_title;
     $multichoice->type = "multichoice";
     $multichoice->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
     $multichoice->uid = 1; 
@@ -198,6 +202,9 @@ function eparse_view($id){
     $multichoice->status = 1; //(1 or 0): published or not
     $multichoice->promote = 0; //(1 or 0): promoted to front page
     $multichoice->comment = 0; //2 = comments on, 1 = comments of
+    $multichoice->body[$multichoice->language][0]['value']   = $full_title;
+    $multichoice->body[$multichoice->language][0]['summary'] = $full_title;
+    $multichoice->body[$multichoice->language][0]['format']  = '';
     $multichoice = node_submit($multichoice); // Prepare multichoice for saving
     node_save($multichoice);
 
