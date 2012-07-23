@@ -1,0 +1,205 @@
+<?php
+
+function eparse_menu() {
+
+  // This is the minimum information you can provide for a menu item. This menu
+  // item will be created in the default menu, usually Navigation.
+  
+  $items['eparse/index'] = array(
+    'title' => 'Page Example',
+    'page callback' => 'eparse_form',
+    'access callback' => TRUE,
+    'expanded' => TRUE
+  );
+
+  $items['eparse/%/view'] = array(
+    'title' => 'Page Example',
+    'page callback' => 'eparse_view',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'expanded' => TRUE
+  );
+
+  return $items;
+}
+
+function eparse_form() {
+  return drupal_get_form('eparse_my_form');
+}
+
+function eparse_my_form($form_state) {
+
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name')
+  );
+  $form['exam'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Exam')
+  );
+  $form['answers'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Answers')
+  );
+  
+  // Adds a simple submit button that refreshes the form and clears its contents -- this is the default behavior for forms.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit'
+  );
+  return $form;
+}
+
+function eparse_my_form_submit($form, &$form_state){
+
+  $nid = db_insert('eparser') // Table name no longer needs {}
+    ->fields(array(
+      'name' => $form_state['values']['name'],
+      'answers' => $form_state['values']['answers'],
+      'html' => $form_state['values']['exam']
+    ))
+  ->execute();
+
+  $form_state['redirect'] = array(
+    'eparse/'. $nid . '/view'
+    );
+}
+
+function eparse_view($id){
+
+  $questions = array();
+  $content ="";
+  $result = db_select('eparser', 'n')
+    ->fields('n')
+    ->condition('id', $id,'=')
+    ->execute()
+    ->fetchAssoc();
+
+  //Create node
+  $quiz = new stdClass();
+  $quiz->title = $result['name'];
+  $quiz->type = "quiz";
+  $quiz->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
+  $quiz->uid = 1; 
+  $quiz->status = 1; //(1 or 0): published or not
+  $quiz->promote = 0; //(1 or 0): promoted to front page
+  $quiz->comment = 0; //2 = comments on, 1 = comments of
+  //$quiz = node_submit($quiz); // Prepare quiz for saving
+  //node_save($quiz);
+
+  //Find questions
+  $subject = ' qstart  intro  ' . $result['html'];
+  $pattern = '/0000([a-z0-9]{14})</';
+  
+  // 1
+  $subject= preg_replace($pattern, "> altend qend $1 qstart intro <" ,$subject);
+  
+  // 2
+  //$pattern = "/>(a\s{0,1}<)/ims"; old
+  $pattern = "/>(a\s{0,1}<\/b><br>\r\n\r\n.+\r\n\r\n)/imsU";
+  $subject= preg_replace($pattern, "> iend altstart <p>$1" ,$subject);
+
+  //clean q numbers
+  $subject = preg_replace('/-[0-9]{1,3}-/', '', $subject);
+
+  //clean Test preview as PDF!
+  $subject = str_replace('Test preview as PDF!', '', $subject);
+  //Find  qstart  and  qend 
+  $pattern = '/qstart(.+?)qend/ims';
+  preg_match_all($pattern, $subject, $matches);
+
+  //true alts without whitespace
+  $true_alts = array();
+
+  //counter
+  $c = 1;
+
+  //Questions:
+  foreach ($matches[1] as $key => $question) {
+    //find intro
+    preg_match('/intro(.+?)iend/ims', $question, $intro);
+
+    if (array_key_exists(0, $intro)){
+
+      $intro[1] = preg_replace('/>[0-9]{1,3}</', '', $intro[1]);
+      $intro[1] = trim(strip_tags($intro[1], '<img>'));
+      $intro[1] = preg_replace( '/\s{2}/', '', $intro[1]);
+      //find alternatives
+      preg_match('/altstart(.+?)altend/ims', $question, $alternatives);
+
+      //try to remove letters
+      $alternatives[1] = trim(strip_tags(preg_replace('/<.+?>[ABCDEFGH]{1}.?<.+?>/', '', $alternatives[1])));
+      $alternatives[1] = preg_replace('/^(.+?)$/msx', '---$1---', $alternatives[1]);
+      
+      preg_match_all('/---(.+)---/U', $alternatives[1], $alternatives);
+
+      $i = 0;
+      if (array_key_exists(0, $alternatives)){
+        foreach ($alternatives[1] as $key2 => $value) {
+          if (preg_match('/[a-z0-9]+/i', $value, $out))
+          {
+            //amend img tags
+            $path = str_replace(' ', '-', $result['name']);
+            $intro[1] = str_replace('IMG src="', 'img src="/exam_images/' . $path . '/', $intro[1]);
+            $true_alts[$c]['title'] = $intro[1];
+            $true_alts[$c]['alternatives'][$i]['text'] = $value;
+            $true_alts[$c]['alternatives'][$i]['value'] = 0;
+            $i++;
+          }
+        }
+      }
+    $c++;
+    }
+  }
+
+  //Work out answers
+  $answers = $result['answers'];
+  $answers = str_replace(
+                array('A','B','C','D','E','F','G'), 
+                array('0','1','2','3','4','5','6'),
+                $answers
+              );
+
+  //preg_match_all('/>([0-9]+)<.+\r\n\t.+>([0-9]{1})</msxU', $answers, $pairs); old
+  preg_match_all('/^([0-9]{1,3})<br>\r\n\r\n([0-9]{1})</msxU', $answers, $pairs);
+
+  $q_numbers = $pairs[1];
+  $q_answers = $pairs[2];
+
+  foreach ($q_numbers as $key => $value) {
+
+    # Find the correct answer
+    $answer = $q_answers[$key];
+
+    #Add the point
+    $true_alts["$value"]['alternatives']["$answer"]['value'] = 1;
+
+   
+  }
+
+
+  // Now you Create nodes and Questions
+
+//    return dpm($true_alts);
+
+  //Temporary pretty
+  foreach ($true_alts as $key => $value) {
+
+    //Display question
+    $content .= "<h3>$key: ". $value['title'] ."</h3>";
+
+    //ordered list 
+    $content .= "<ol>";
+
+    //Display alternatives
+    foreach ($value['alternatives'] as $key => $value) {
+      
+      $content .= ($value['value']) ? "<li><b>" . $value['text'] . "</b></li>" : "<li>" . $value['text'] . "</li>";
+
+    }
+
+    //ordered list 
+    $content .= "</ol>";
+  }
+  return $content;
+}

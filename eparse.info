@@ -1,0 +1,3 @@
+name = Eparse
+description = Module for form api tutorial
+core = 7.x
