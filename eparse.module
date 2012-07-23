@@ -195,7 +195,7 @@ function eparse_view($id){
     $multichoice->status = 1; //(1 or 0): published or not
     $multichoice->promote = 0; //(1 or 0): promoted to front page
     $multichoice->comment = 0; //2 = comments on, 1 = comments of
-    //$multichoice = node_submit($multichoice); // Prepare multichoice for saving
+    $multichoice = node_submit($multichoice); // Prepare multichoice for saving
     //node_save($multichoice);
 
     //Display question
