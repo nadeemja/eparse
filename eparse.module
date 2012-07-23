@@ -217,7 +217,7 @@ function eparse_view($id){
         'child_nid' => $multichoice->nid,
         'child_vid' => $multichoice->vid,
         'question_status' => 1,
-        'weight' => $key + 1,
+        'weight' => $key,
         'max_score' => 1,
       ))
       ->execute();
@@ -234,7 +234,7 @@ function eparse_view($id){
       //Add alternatives to db
       $add_db_alt = db_insert('quiz_multichoice_answers') // Table name no longer needs {}
       ->fields(array(
-        'answer' => '',
+        'answer' => $value['text'],
         'answer_format' => 'plain_text',
         'feedback_if_chosen' => '', 
         'feedback_if_chosen_format' => 'full_html',
