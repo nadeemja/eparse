@@ -192,6 +192,9 @@ function eparse_view($id){
     $multichoice->type = "multichoice";
     $multichoice->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
     $multichoice->uid = 1; 
+    $multichoice->choice_multi = 0; 
+    $multichoice->choice_random = 0; 
+    $multichoice->choice_boolean = 0; 
     $multichoice->status = 1; //(1 or 0): published or not
     $multichoice->promote = 0; //(1 or 0): promoted to front page
     $multichoice->comment = 0; //2 = comments on, 1 = comments of
