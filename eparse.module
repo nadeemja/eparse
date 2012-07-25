@@ -205,22 +205,16 @@ function eparse_view($id){
     $multichoice->body[$multichoice->language][0]['value']   = $full_title;
     $multichoice->body[$multichoice->language][0]['summary'] = $full_title;
     $multichoice->body[$multichoice->language][0]['format']  = '';
+
+     //Add alternatives $multichoice
+    $alternatives_object = new stdClass();
+    $alternatives_object->nid = $quiz->nid;
+    $alternatives_object->vid = $quiz->vid;
+    $multichoice->add_directly['new'] = $alternatives_object;
+    
+    //prepare and save
     $multichoice = node_submit($multichoice); // Prepare multichoice for saving
     node_save($multichoice);
-
-    //add question to quiz
-     //Add alternatives to db
-      $add_question_to_quiz = db_insert('quiz_node_relationship') // Table name no longer needs {}
-      ->fields(array(
-        'parent_nid' => $quiz->nid,
-        'parent_vid' => $quiz->vid,
-        'child_nid' => $multichoice->nid,
-        'child_vid' => $multichoice->vid,
-        'question_status' => 1,
-        'weight' => $key,
-        'max_score' => 1,
-      ))
-      ->execute();
 
     //Display question
     $content .= "<h3>$key: ". $value['title'] ."</h3>";
