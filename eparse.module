@@ -187,14 +187,16 @@ function eparse_view($id){
 
 
     //short and full titles
-    $full_title = $value['title'];
-    $short_title = strip_tags(substr($full_title, 0, 50));
+    $full_title = htmlspecialchars($value['title'], ENT_NOQUOTES, 'UTF-8');
+    $short_title = htmlspecialchars(strip_tags($value['title']), ENT_NOQUOTES, 'UTF-8');
+    $short_title = htmlspecialchars(substr($short_title, 0, 50), ENT_NOQUOTES, 'UTF-8');
 
     //Create question node
     $multichoice = new stdClass();
     $multichoice->title = $short_title;
     $multichoice->type = "multichoice";
     $multichoice->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
+    $multichoice->add_directly['new'] = '';
     $multichoice->uid = 1; 
     $multichoice->choice_multi = 0; 
     $multichoice->choice_random = 0; 
@@ -203,7 +205,7 @@ function eparse_view($id){
     $multichoice->promote = 0; //(1 or 0): promoted to front page
     $multichoice->comment = 0; //2 = comments on, 1 = comments of
     $multichoice->body[$multichoice->language][0]['value']   = $full_title;
-    $multichoice->body[$multichoice->language][0]['summary'] = $full_title;
+    $multichoice->body[$multichoice->language][0]['summary'] = $short_title;
     $multichoice->body[$multichoice->language][0]['format']  = 'full_html';
     $multichoice = node_submit($multichoice); // Prepare multichoice for saving
     node_save($multichoice);
@@ -234,7 +236,7 @@ function eparse_view($id){
       //Add alternatives to db
       $add_db_alt = db_insert('quiz_multichoice_answers') // Table name no longer needs {}
       ->fields(array(
-        'answer' => $value['text'],
+        'answer' => htmlspecialchars($value['text'], ENT_NOQUOTES, 'UTF-8'),
         'answer_format' => 'plain_text',
         'feedback_if_chosen' => '', 
         'feedback_if_chosen_format' => 'full_html',
@@ -253,6 +255,7 @@ function eparse_view($id){
 
     //ordered list 
     $content .= "</ol>";
+    $content .= "<p><a href=/node/$multichoice->nid/edit>EDIT</a></p>";
   }
   return $content;
 }
