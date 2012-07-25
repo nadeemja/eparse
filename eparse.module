@@ -188,7 +188,7 @@ function eparse_view($id){
 
     //short and full titles
     $full_title = $value['title'];
-    $short_title = strip_tags(substr($full_title, 0, 30));
+    $short_title = strip_tags(substr($full_title, 0, 50));
 
     //Create question node
     $multichoice = new stdClass();
