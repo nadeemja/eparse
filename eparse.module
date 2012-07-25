@@ -196,7 +196,7 @@ function eparse_view($id){
     $multichoice->type = "multichoice";
     $multichoice->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
     $multichoice->uid = 1; 
-    $multichoice->add_directly = ''; 
+    $multichoice->add_directly['new'] = ''; 
     $multichoice->choice_multi = 0; 
     $multichoice->choice_random = 0; 
     $multichoice->choice_boolean = 0; 
