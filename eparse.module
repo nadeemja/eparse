@@ -187,7 +187,7 @@ function eparse_view($id){
 
 
     //short and full titles
-    $full_title = htmlspecialchars($value['title'], ENT_NOQUOTES, 'UTF-8');
+    $full_title = $value['title'];
     $short_title = htmlspecialchars(strip_tags($value['title']), ENT_NOQUOTES, 'UTF-8');
     $short_title = htmlspecialchars(substr($short_title, 0, 50), ENT_NOQUOTES, 'UTF-8');
 
