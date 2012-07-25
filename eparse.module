@@ -204,7 +204,7 @@ function eparse_view($id){
     $multichoice->comment = 0; //2 = comments on, 1 = comments of
     $multichoice->body[$multichoice->language][0]['value']   = $full_title;
     $multichoice->body[$multichoice->language][0]['summary'] = $full_title;
-    $multichoice->body[$multichoice->language][0]['format']  = '';
+    $multichoice->body[$multichoice->language][0]['format']  = 'full_html';
     $multichoice = node_submit($multichoice); // Prepare multichoice for saving
     node_save($multichoice);
 
