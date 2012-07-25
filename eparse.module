@@ -207,11 +207,8 @@ function eparse_view($id){
     $multichoice->body[$multichoice->language][0]['format']  = '';
 
      //Add alternatives $multichoice
-    $alternatives_object = new stdClass();
-    $alternatives_object->nid = $quiz->nid;
-    $alternatives_object->vid = $quiz->vid;
-    $multichoice->add_directly['new'] = $alternatives_object;
-    
+    $multichoice->add_directly['new'] = $short_title;
+
     //prepare and save
     $multichoice = node_submit($multichoice); // Prepare multichoice for saving
     node_save($multichoice);
